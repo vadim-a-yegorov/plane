@@ -87,6 +87,12 @@ type IssueRelation = {
   sequence_id: number;
 };
 
+export type TIssuePage = {
+  id: string;
+  name: string;
+  project_ids: string[];
+};
+
 export type TIssue = TBaseIssue & {
   description_html?: string;
   is_subscribed?: boolean;
@@ -96,6 +102,7 @@ export type TIssue = TBaseIssue & {
   issue_link?: TIssueLink[];
   issue_relation?: IssueRelation[];
   issue_related?: IssueRelation[];
+  issue_pages?: TIssuePage[];
   // tempId is used for optimistic updates. It is not a part of the API response.
   tempId?: string;
   // sourceIssueId is used to store the original issue id when creating a copy of an issue. Used in cloning property values. It is not a part of the API response.

@@ -198,4 +198,29 @@ class DynamicBaseSerializer(BaseSerializer):
                 else:
                     response["issue_attachments"] = []
 
+            if "issue_pages" in self.fields or "issue_pages" in self.expand:
+                from plane.db.models import PageLog
+
+                issue_id = getattr(instance, "id", None)
+                pages = []
+                seen_page_ids = set()
+
+                if issue_id:
+                    page_logs = PageLog.objects.filter(
+                        entity_name="issue", entity_identifier=issue_id
+                    ).select_related("page").prefetch_related("page__projects")
+                    for log in page_logs:
+                        page = log.page
+                        if page and page.id not in seen_page_ids:
+                            seen_page_ids.add(page.id)
+                            pages.append(
+                                {
+                                    "id": page.id,
+                                    "name": page.name,
+                                    "project_ids": [str(project.id) for project in page.projects.all()],
+                                }
+                            )
+
+                response["issue_pages"] = pages
+
         return response

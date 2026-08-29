@@ -43,6 +43,8 @@ from plane.db.models import (
     IssueDescriptionVersion,
     ProjectMember,
     EstimatePoint,
+    Page,
+    PageLog,
 )
 from plane.utils.content_validator import (
     validate_html_content,
@@ -933,6 +935,40 @@ class IssueListDetailSerializer(serializers.Serializer):
                         }
                     )
                 data["issue_related"] = related
+
+            if "issue_link" in self.expand:
+                data["issue_link"] = [
+                    {"id": link.id, "issue_id": link.issue_id, "title": link.title, "url": link.url}
+                    for link in instance.issue_link.all()
+                ]
+
+            if "issue_attachments" in self.expand:
+                data["issue_attachments"] = [
+                    {"id": asset.id, "asset_url": asset.asset_url, "attributes": asset.attributes}
+                    for asset in instance.assets.all()
+                    if asset.entity_type == FileAsset.EntityTypeContext.ISSUE_ATTACHMENT
+                ]
+
+            if "issue_pages" in self.expand:
+                pages = []
+                seen_page_ids = set()
+                page_logs = (
+                    PageLog.objects.filter(entity_name="issue", entity_identifier=instance.id)
+                    .select_related("page")
+                    .prefetch_related("page__projects")
+                )
+                for log in page_logs:
+                    page = log.page
+                    if page and page.id not in seen_page_ids:
+                        seen_page_ids.add(page.id)
+                        pages.append(
+                            {
+                                "id": page.id,
+                                "name": page.name,
+                                "project_ids": [str(project.id) for project in page.projects.all()],
+                            }
+                        )
+                data["issue_pages"] = pages
 
         return data
 
