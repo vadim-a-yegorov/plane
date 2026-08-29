@@ -3,6 +3,7 @@ ENV PNPM_HOME=/pnpm
 ENV PATH=/pnpm:/pnpm/bin:$PATH
 ENV CI=1
 ENV TURBO_TELEMETRY_DISABLED=1
+ENV VITE_ADMIN_BASE_PATH=/god-mode
 RUN corepack enable
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
