@@ -79,10 +79,6 @@ class WorkSpaceViewSet(BaseViewSet):
         )
 
     def create(self, request):
-        return Response(
-            {"error": "Workspace creation is disabled"},
-            status=status.HTTP_403_FORBIDDEN,
-        )
         try:
             (DISABLE_WORKSPACE_CREATION,) = get_configuration_value(
                 [
