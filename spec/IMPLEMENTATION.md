@@ -22,8 +22,8 @@ Routes/serializers/views deleted; Django models kept. Removing models forces a m
 - plane/app/views/project/base.py — no project-count gate (many projects allowed).
 - plane/app/views/page/base.py — parent set on create/update → 400.
 - plane/db/models/project.py + migration 0123 — calendar_enabled BooleanField default False.
-- plane/app/serializers/issue.py — description_* read-only on IssueCreateSerializer; validate() rejects dates when project calendar disabled.
-- plane/api/serializers/issue.py — description_* popped in validate(); same date gate.
+- plane/app/serializers/issue.py — description\_\* read-only on IssueCreateSerializer; validate() rejects dates when project calendar disabled.
+- plane/api/serializers/issue.py — description\_\* popped in validate(); same date gate.
 - plane/app/views/flat.py + plane/app/urls/flat.py — My Work / All Work endpoints.
 - URL unregistrations: cycles, modules, intake, estimates, views, analytics, webhooks, external, exporter, comments (issue.py, api/work_item.py, space/issue.py), comment reactions, issue-dates bulk endpoint, work-item description-versions, draft-issues, deploy-boards, favorites, stickies, recent-visits, quick-links, home-preferences, workspace modules/cycles/estimates lists.
 
@@ -47,3 +47,57 @@ Routes/serializers/views deleted; Django models kept. Removing models forces a m
 ## Run
 
 apps/api: uv venv .venv --python 3.11; uv pip install -p .venv/bin/python -r requirements/local.txt; .env from .env.example with localhost postgres/redis, AMQP_URL=redis://localhost:6379/1, SECRET_KEY set. DJANGO_SETTINGS_MODULE=plane.settings.local manage.py runserver 8080. Probe user probe@local.dev / probepass123, ws probe-ws.
+
+## MS Teams connector (design, 2026-08-29)
+
+Sources: Perplexity threads 20b53e90 (Teams notifications) and 67afbc83 (SAML SSO), recovered via deplexity to /tmp/ppx/threads/; Microsoft Learn primaries (tab SSO with Entra, send proactive messages, Graph proactive bot install, activity feed notifications, tab configuration page).
+
+Facts.
+
+1. Plane ships no Teams integration. Slack is the only first-party comms app and this fork's apps/api contains no Slack connector source (only the slack_sdk dependency), so the Teams connector is a new module — nothing to rewrite.
+2. The strip unregistered webhook and integration routes; the Django models remain. The event source for Teams is the workspace webhook re-enabled (smaller diff than a new emitter).
+3. Plane webhooks: publicly reachable https URLs only, v2 event JSON, plane*wh*... secret from CSV, any 2xx = success, 5xx retried with backoff, disabled after 5 failures. Teams Workflow/connector endpoints do not accept the raw v2 shape — a relay normalizes.
+4. Tab SSO: TeamsJS app.initialize + authentication.getAuthToken gives an Entra token with silent consent; manifest needs webApplicationInfo with Application ID URI api://<tab-host>/<client-id>. Backend validates oid, tid, preferred_username.
+5. Login cannot run inside an iframe. The tab host performs the SSO exchange; the Plane session comes from OIDC against the same tenant. Plane SAML alternative (thread 67afbc83): non-gallery Entra enterprise app, Name ID format email from user.mail, plus claims email / firstName / lastName with EMPTY namespace.
+6. Proactive DMs need a stored conversationReference per employee. Obtained on first personal-app open, or via Graph: POST /users/{user-id}/teamwork/installedApps. Cannot DM arbitrary directory users without install.
+7. Graph sendActivityFeedNotifications is the bell-icon alternative; DM pings already cover the requirement, feed stays optional.
+
+Shape: one custom Teams app, three surfaces.
+
+1. Configurable tab "Board" (team/channel scope) — iframe of that project's kanban: https://<plane>/{workspaceSlug}/projects/{projectId}/issues/?layout=kanban
+2. Configurable tab "Notes" (team/channel scope) — iframe of that project's pages: https://<plane>/{workspaceSlug}/projects/{projectId}/pages/
+3. Bot with personal scope — employee DMs.
+
+Mappings.
+
+1. Tab configuration page stores {workspaceSlug, projectId, teamId, channelId} in entityId; the relay keeps projectId → channelId.
+2. Personal app first open stores {oid, email, conversationReference}; email (Entra UPN, from OIDC userinfo) is the join key to the Plane user.
+
+Event path (one-way).
+
+1. Plane webhook (routes re-enabled) → relay service (small HTTP receiver) → two sinks.
+2. Channel sink: project-shared events (created, state change, urgent, done) → Adaptive Card in the mapped channel with an Open deep link into the Board tab (subEntityId = work item id).
+3. Employee sink: assignee added/changed, urgent on an assigned item, due date inside the window, blocked → proactive DM to that user only, card buttons limited to Open Board / Open Item.
+4. No reply handling, no thread sync — comments are deleted in this fork, so there is nothing to sync back.
+
+Auth stack.
+
+1. One Entra app registration shared by tab SSO and the Bot Framework channel registration.
+2. Plane OIDC client configured in God Mode against that tenant; SAML fallback per item 5 above.
+3. This fork controls its own deploy, so the proxy sets Content-Security-Policy frame-ancestors for teams.microsoft.com and the Plane session cookie to SameSite=None; without both, the iframes render blank.
+
+Build order.
+
+1. Re-enable workspace webhook routes in the fork.
+2. Entra app registration + Teams manifest (configurableTabs ×2, bots, webApplicationInfo, validDomains = tab host + plane host).
+3. Plane OIDC to the tenant; verify the email join end-to-end.
+4. Proxy CSP + cookie change.
+5. Tab configuration page: pick workspace + project, save entityId.
+6. Relay service: receive webhook, verify plane*wh* signature, normalize, post channel card, send DM ping.
+7. Employee onboarding: personal app install per user (manual or Graph proactive install), conversationReference stored.
+
+Open items.
+
+1. Relay hosting — candidate: another Railway service beside plane-production-a21c.
+2. Distribution inside the tenant: sideload during build, org-wide app policy for the 4-office rollout.
+3. Activity feed notifications — keep as v2 if DM noise needs a quieter channel.
