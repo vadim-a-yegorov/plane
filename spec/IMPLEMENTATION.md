@@ -96,8 +96,19 @@ Build order.
 6. Relay service: receive webhook, verify plane*wh* signature, normalize, post channel card, send DM ping.
 7. Employee onboarding: personal app install per user (manual or Graph proactive install), conversationReference stored.
 
+Relay implementation (2026-08-29, build order step 6 done in-process).
+
+1. The relay lives inside the Plane API, no separate service: POST /api/teams/relay/ (TeamsRelayEndpoint) receives the workspace webhook delivery, recomputes HMAC-SHA256 over the raw body with the webhook row's secret_key, compares against X-Plane-Signature via compare_digest, 404 unknown webhook / 403 bad signature.
+2. Bodies match by construction: webhook_send_task signs json.dumps(payload) and requests json=payload re-serializes with the same defaults, so the signed bytes are the delivered bytes.
+3. Sinks in plane/services/relay_cards.py: channel_sink resolves projectId → TeamsChannelBinding, resolves a channel conversation id once via Bot Framework POST /v3/conversations (cached on the row), posts a MessageCard with Open board action; dm_sink resolves assignee emails → TeamsEmployee rows with stored conversationReference, DMs each. Bot token = client_credentials against login.microsoftonline.com/botframework.com, cached in-process until 60s before expiry. Outbound calls go through pinned_fetch.
+4. Tables (migration 0124): teams_channel_bindings (project unique while active; team/channel/tenant/service_url/conversation_id) and teams_employees (binding+email unique while active; oid, conversationReference JSON, optional user FK — email is the join key to Plane users).
+5. Admin surface: GET/POST /api/workspaces/<slug>/teams/bindings/ and .../teams/employees/ (workspace-admin permission), plus DELETE binding by id.
+6. Tab config page (deploy/teams/config.html) now also POSTs the binding (project_id, team_id, channel_id, tenant_id from TeamsJS context) on save; failure only shows a warning, tab save itself is unaffected. CSRF is not an obstacle: BaseSessionAuthentication.enforce_csrf is a no-op in this fork.
+7. Env: MS_APP_ID, MS_APP_PASSWORD, MS_BOT_SERVICE_URL (default https://smba.trafficmanager.net/teams/). Until the Entra app exists the sinks return "bot not configured" and the relay still answers 200.
+8. Verified locally: py_compile all new files, makemigrations --check reports no drift after verbose_name fix ("Last Modified By"), manage.py check clean, reverse() resolves all three URL names.
+
 Open items.
 
-1. Relay hosting — candidate: another Railway service beside plane-production-a21c.
+1. Relay hosting — resolved: in-process, no separate Railway service.
 2. Distribution inside the tenant: sideload during build, org-wide app policy for the 4-office rollout.
 3. Activity feed notifications — keep as v2 if DM noise needs a quieter channel.

@@ -14,6 +14,7 @@ from .workspace import urlpatterns as workspace_urls
 from .timezone import urlpatterns as timezone_urls
 from .flat import urlpatterns as flat_urls
 from .webhook import urlpatterns as webhook_urls
+from .teams import urlpatterns as teams_urls
 
 urlpatterns = [
     *asset_urls,
@@ -28,4 +29,5 @@ urlpatterns = [
     *timezone_urls,
     *flat_urls,
     *webhook_urls,
+    *teams_urls,
 ]

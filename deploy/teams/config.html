@@ -41,6 +41,7 @@ button { margin-top: 12px; padding: 8px 16px; font-size: 14px; border: 1px solid
   var msg = document.getElementById("msg");
   var teamId = null;
   var channelId = null;
+  var tenantId = null;
 
   titleEl.textContent = mode === "notes" ? "Notes tab" : "Board tab";
 
@@ -52,6 +53,35 @@ button { margin-top: 12px; padding: 8px 16px; font-size: 14px; border: 1px solid
         throw e;
       }
       return r.json();
+    });
+  }
+
+  function apiPost(path, body) {
+    return fetch(origin + path, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) {
+        var e = new Error("HTTP " + r.status);
+        e.status = r.status;
+        throw e;
+      }
+      return r.json();
+    });
+  }
+
+  function saveBinding() {
+    if (!workspaceSel.value || !projectSel.value || !teamId || !channelId) return;
+    apiPost("/api/workspaces/" + encodeURIComponent(workspaceSel.value) + "/teams/bindings/", {
+      project_id: projectSel.value,
+      team_id: teamId,
+      channel_id: channelId,
+      tenant_id: tenantId
+    }).catch(function (e) {
+      msg.textContent = "Tab saved, notification binding failed: " + (e && e.message ? e.message : e);
+      msg.classList.add("err");
     });
   }
 
@@ -107,6 +137,7 @@ button { margin-top: 12px; padding: 8px 16px; font-size: 14px; border: 1px solid
       suggestedDisplayName: (mode === "notes" ? "Notes: " : "Board: ") + name
     });
     microsoftTeams.pages.config.setValidityState(true);
+    saveBinding();
   }
 
   function fail(e) {
@@ -181,6 +212,7 @@ button { margin-top: 12px; padding: 8px 16px; font-size: 14px; border: 1px solid
     .then(function (ctx) {
       teamId = ctx && ctx.team && ctx.team.internalId ? ctx.team.internalId : null;
       channelId = ctx && ctx.channel && ctx.channel.internalId ? ctx.channel.internalId : null;
+      tenantId = ctx && ctx.app && ctx.app.tenant && ctx.app.tenant.id ? ctx.app.tenant.id : null;
       microsoftTeams.pages.config.registerOnRemoveHandler(function (ev) {
         ev.notifySuccess();
       });
