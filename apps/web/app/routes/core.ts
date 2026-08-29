@@ -85,6 +85,7 @@ export const coreRoutes: RouteConfigEntry[] = [
         // Your pages
         layout("./(all)/[workspaceSlug]/(projects)/your-pages/layout.tsx", [
           route(":workspaceSlug/your-pages", "./(all)/[workspaceSlug]/(projects)/your-pages/page.tsx"),
+          route(":workspaceSlug/your-pages/:tabId", "./(all)/[workspaceSlug]/(projects)/your-pages/[tabId]/page.tsx"),
         ]),
 
         // Notifications
