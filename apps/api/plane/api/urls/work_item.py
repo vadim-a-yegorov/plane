@@ -9,8 +9,6 @@ from plane.api.views import (
     IssueDetailAPIEndpoint,
     IssueLinkListCreateAPIEndpoint,
     IssueLinkDetailAPIEndpoint,
-    IssueCommentListCreateAPIEndpoint,
-    IssueCommentDetailAPIEndpoint,
     IssueActivityListAPIEndpoint,
     IssueActivityDetailAPIEndpoint,
     IssueAttachmentListCreateAPIEndpoint,
@@ -51,16 +49,6 @@ old_url_patterns = [
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/links/<uuid:pk>/",
         IssueLinkDetailAPIEndpoint.as_view(http_method_names=["get", "patch", "delete"]),
         name="link",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/comments/",
-        IssueCommentListCreateAPIEndpoint.as_view(http_method_names=["get", "post"]),
-        name="comment",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/comments/<uuid:pk>/",
-        IssueCommentDetailAPIEndpoint.as_view(http_method_names=["get", "patch", "delete"]),
-        name="comment",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/activities/",
@@ -115,16 +103,6 @@ new_url_patterns = [
         "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:issue_id>/links/<uuid:pk>/",
         IssueLinkDetailAPIEndpoint.as_view(http_method_names=["get", "patch", "delete"]),
         name="work-item-link-detail",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:issue_id>/comments/",
-        IssueCommentListCreateAPIEndpoint.as_view(http_method_names=["get", "post"]),
-        name="work-item-comment-list",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:issue_id>/comments/<uuid:pk>/",
-        IssueCommentDetailAPIEndpoint.as_view(http_method_names=["get", "patch", "delete"]),
-        name="work-item-comment-detail",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:issue_id>/activities/",
