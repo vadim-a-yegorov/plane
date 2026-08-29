@@ -10,8 +10,9 @@ import { PageIcon } from "@plane/propel/icons";
 import { Breadcrumbs, Header } from "@plane/ui";
 // components
 import { AppHeader } from "@/components/core/app-header";
-import { ContentWrapper } from "@/components/core/content-wrapper";
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
+import { ContentWrapper } from "@/components/core/content-wrapper";
+import { YourPagesNavbar } from "./navbar";
 
 function YourPagesHeader() {
   const { t } = useTranslation();
@@ -35,7 +36,12 @@ export default function YourPagesLayout() {
     <>
       <AppHeader header={<YourPagesHeader />} />
       <ContentWrapper>
-        <Outlet />
+        <div className="flex h-full w-full flex-col overflow-hidden">
+          <YourPagesNavbar />
+          <div className="h-full w-full overflow-hidden">
+            <Outlet />
+          </div>
+        </div>
       </ContentWrapper>
     </>
   );
