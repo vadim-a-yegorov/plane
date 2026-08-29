@@ -8,8 +8,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY . .
 RUN pnpm add -g turbo@2.9.18
-RUN --mount=type=cache,id=cacheKey-pnpm-store,target=/pnpm/store pnpm fetch --store-dir=/pnpm/store
-RUN --mount=type=cache,id=cacheKey-pnpm-store,target=/pnpm/store pnpm install --offline --frozen-lockfile --store-dir=/pnpm/store
+RUN pnpm install --frozen-lockfile
 RUN turbo run build --filter=web --filter=admin --filter=live
 
 FROM python:3.12.10-alpine AS apibuild
