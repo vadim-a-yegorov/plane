@@ -12,6 +12,10 @@
 		max_size {$FILE_SIZE_LIMIT}
 	}
 
+	header {
+		Content-Security-Policy "frame-ancestors 'self' https://teams.microsoft.com https://*.teams.microsoft.com https://teams.live.com https://*.teams.live.com https://*.skype.com"
+	}
+
 	handle /live/* {
 		reverse_proxy localhost:3005
 	}
