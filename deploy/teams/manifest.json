@@ -1,0 +1,50 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "a3060595-1db4-47c5-875c-695c991f9c6e",
+  "developer": {
+    "name": "7 Systems LLC",
+    "websiteUrl": "https://{{PLANE_HOST}}",
+    "privacyUrl": "https://{{PLANE_HOST}}/privacy",
+    "termsOfUseUrl": "https://{{PLANE_HOST}}/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Plane",
+    "full": "Plane — board and notes"
+  },
+  "description": {
+    "short": "Project board and notes for your team.",
+    "full": "Adds a Plane board tab and a notes tab to any channel, and sends work updates as private messages."
+  },
+  "accentColor": "#3F76FF",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://{{PLANE_HOST}}/teams-config/?mode=board",
+      "canUpdateConfiguration": true,
+      "scopes": ["team"]
+    },
+    {
+      "configurationUrl": "https://{{PLANE_HOST}}/teams-config/?mode=notes",
+      "canUpdateConfiguration": true,
+      "scopes": ["team"]
+    }
+  ],
+  "bots": [
+    {
+      "botId": "{{ENTRA_CLIENT_ID}}",
+      "scopes": ["personal"],
+      "supportsFiles": false,
+      "isNotificationOnly": true
+    }
+  ],
+  "webApplicationInfo": {
+    "id": "{{ENTRA_CLIENT_ID}}",
+    "resource": "api://{{PLANE_HOST}}/{{ENTRA_CLIENT_ID}}"
+  },
+  "validDomains": ["{{PLANE_HOST}}"]
+}

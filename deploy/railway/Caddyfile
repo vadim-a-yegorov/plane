@@ -1,0 +1,52 @@
+{
+	auto_https off
+	servers {
+		max_header_size 25MB
+		client_ip_headers X-Forwarded-For X-Real-IP
+		trusted_proxies static 0.0.0.0/0
+	}
+}
+
+:{$PORT} {
+	request_body {
+		max_size {$FILE_SIZE_LIMIT}
+	}
+
+	header {
+		Content-Security-Policy "frame-ancestors 'self' https://teams.microsoft.com https://*.teams.microsoft.com https://teams.live.com https://*.teams.live.com https://*.skype.com"
+	}
+
+	handle /live/* {
+		reverse_proxy localhost:3005
+	}
+
+	handle /api/* {
+		reverse_proxy localhost:3004
+	}
+
+	handle /auth/* {
+		reverse_proxy localhost:3004
+	}
+
+	handle /static/* {
+		reverse_proxy localhost:3004
+	}
+
+	handle_path /teams-config* {
+		root * /app/teams-config
+		try_files {path} /config.html
+		file_server
+	}
+
+	handle_path /god-mode* {
+		root * /app/admin
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+
+	handle_path /* {
+		root * /app/web
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+}
