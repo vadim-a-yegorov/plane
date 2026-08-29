@@ -232,6 +232,12 @@ from .webhook.base import (
     WebhookSecretRegenerateEndpoint,
 )
 
+from .teams.base import (
+    TeamsBindingEndpoint,
+    TeamsEmployeeEndpoint,
+    TeamsRelayEndpoint,
+)
+
 from .error_404 import custom_404_view
 
 from .notification.base import MarkAllReadNotificationViewSet

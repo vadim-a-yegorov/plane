@@ -417,6 +417,11 @@ LIVE_URL = urljoin(LIVE_BASE_URL, LIVE_BASE_PATH) if LIVE_BASE_URL else None
 # WEB URL
 WEB_URL = os.environ.get("WEB_URL")
 
+# Teams
+MS_APP_ID = os.environ.get("MS_APP_ID")
+MS_APP_PASSWORD = os.environ.get("MS_APP_PASSWORD")
+MS_BOT_SERVICE_URL = os.environ.get("MS_BOT_SERVICE_URL", "https://smba.trafficmanager.net/teams/")
+
 HARD_DELETE_AFTER_DAYS = int(os.environ.get("HARD_DELETE_AFTER_DAYS", 60))
 
 
