@@ -13,7 +13,6 @@ from plane.app.views import (
     IssueActivityEndpoint,
     IssueArchiveViewSet,
     IssueListEndpoint,
-    IssueReactionViewSet,
     IssueRelationViewSet,
     IssueSubscriberViewSet,
     ProjectUserDisplayPropertyEndpoint,
@@ -165,18 +164,6 @@ urlpatterns = [
         name="project-issue-subscribers",
     ),
     ## End Issue Subscribers
-    # Issue Reactions
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/reactions/",
-        IssueReactionViewSet.as_view({"get": "list", "post": "create"}),
-        name="project-issue-reactions",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/reactions/<str:reaction_code>/",
-        IssueReactionViewSet.as_view({"delete": "destroy"}),
-        name="project-issue-reactions",
-    ),
-    ## End Issue Reactions
     ## ProjectUserProperty
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/user-properties/",

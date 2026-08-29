@@ -127,6 +127,9 @@ class IssueCreateSerializer(BaseSerializer):
         return data
 
     def validate(self, attrs):
+        for field in ("description_html", "description_binary", "description_json", "description_stripped"):
+            attrs.pop(field, None)
+
         allow_triage = self.context.get("allow_triage_state", False)
         state_manager = State.triage_objects if allow_triage else State.objects
 
@@ -826,6 +829,9 @@ class IssueSerializer(DynamicBaseSerializer):
         read_only_fields = fields
 
     def validate(self, data):
+        for field in ("description_html", "description_binary", "description_json", "description_stripped"):
+            data.pop(field, None)
+
         if (
             data.get("state_id")
             and not State.objects.filter(project_id=self.context.get("project_id"), pk=data.get("state_id")).exists()
