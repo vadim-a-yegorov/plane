@@ -12,6 +12,7 @@ import {
   HomeIcon,
   InboxIcon,
   MultipleStickyIcon,
+  PageIcon,
   ProjectIcon,
   ViewsIcon,
   YourWorkIcon,
@@ -34,6 +35,8 @@ export const getSidebarNavigationItemIcon = (key: string, className: string = ""
       return <AnalyticsIcon className={cn("size-4 flex-shrink-0", className)} />;
     case "your_work":
       return <YourWorkIcon className={cn("size-4 flex-shrink-0", className)} />;
+    case "your_pages":
+      return <PageIcon className={cn("size-4 flex-shrink-0", className)} />;
     case "drafts":
       return <DraftIcon className={cn("size-4 flex-shrink-0", className)} />;
     case "archives":

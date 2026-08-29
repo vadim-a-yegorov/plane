@@ -119,8 +119,10 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
 
     if (displayFilters?.layout) issueFiltersParams.layout = displayFilters?.layout;
 
+    const cardExpand = "issue_link,issue_attachments,issue_pages";
     if (ENABLE_ISSUE_DEPENDENCIES && displayFilters?.layout === EIssueLayoutTypes.GANTT)
-      issueFiltersParams["expand"] = "issue_relation,issue_related";
+      issueFiltersParams["expand"] = `issue_relation,issue_related,${cardExpand}`;
+    else issueFiltersParams["expand"] = cardExpand;
 
     return issueFiltersParams;
   };

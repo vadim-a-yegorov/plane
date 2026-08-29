@@ -4,8 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import type { SyntheticEvent } from "react";
-import { useCallback, useMemo } from "react";
+import type { ReactNode, SyntheticEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { xor } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -13,13 +13,15 @@ import { useParams } from "next/navigation";
 import { Paperclip } from "lucide-react";
 // i18n
 import { useTranslation } from "@plane/i18n";
-import { LinkIcon, StartDatePropertyIcon, ViewsIcon, DueDatePropertyIcon } from "@plane/propel/icons";
+import { LinkIcon, PageIcon, StartDatePropertyIcon, ViewsIcon, DueDatePropertyIcon } from "@plane/propel/icons";
 import { Tooltip } from "@plane/propel/tooltip";
 import type { TIssue, IIssueDisplayProperties, TIssuePriorities } from "@plane/types";
 // ui
 import {
   cn,
   getDate,
+  getFileURL,
+  getPageName,
   renderFormattedPayloadDate,
   generateWorkItemLink,
   shouldHighlightIssueDueDate,
@@ -192,6 +194,74 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
   const handleEventPropagation = (e: SyntheticEvent<HTMLDivElement>) => {
     e.stopPropagation();
     e.preventDefault();
+  };
+
+  const [openChips, setOpenChips] = useState<Record<string, boolean>>({});
+
+  type TChip = { id: string; label: string; href: string; external?: boolean };
+
+  const attachmentChips: TChip[] = (issue.issue_attachments ?? []).map((a) => ({
+    id: a.id,
+    label: a.attributes?.name ?? "File",
+    href: getFileURL(a.asset_url) ?? "",
+    external: true,
+  }));
+  const linkChips: TChip[] = (issue.issue_link ?? []).map((l) => ({
+    id: l.id,
+    label: l.title || l.url,
+    href: l.url,
+    external: true,
+  }));
+  const pageChips: TChip[] = (issue.issue_pages ?? []).map((p) => ({
+    id: p.id,
+    label: getPageName(p.name),
+    href: p.project_ids?.length ? `/${workspaceSlug}/projects/${p.project_ids[0]}/pages/${p.id}` : "",
+  }));
+
+  const renderChipBlock = (key: string, chips: TChip[], count: number, icon: ReactNode) => {
+    if (!count) return null;
+    const chipClass =
+      "flex h-5 flex-shrink-0 items-center gap-1 overflow-hidden rounded-sm border-[0.5px] border-strong px-2 py-1";
+    const showList = chips.length > 0 && (chips.length < 5 || openChips[key]);
+    if (!showList)
+      return (
+        // oxlint-disable-next-line jsx_a11y/click-events-have-key-events jsx_a11y/no-static-element-interactions
+        <div
+          className={cn(chipClass, chips.length > 0 && "cursor-pointer hover:bg-layer-1")}
+          onFocus={handleEventPropagation}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (chips.length >= 5) setOpenChips((s) => ({ ...s, [key]: true }));
+          }}
+        >
+          {icon}
+          <div className="text-caption-sm-regular">{count}</div>
+        </div>
+      );
+    return (
+      <>
+        {chips.map((chip) => (
+          // oxlint-disable-next-line jsx_a11y/click-events-have-key-events jsx_a11y/no-static-element-interactions
+          <div
+            key={chip.id}
+            title={chip.label}
+            className={cn(chipClass, "max-w-36 cursor-pointer hover:bg-layer-1")}
+            onFocus={handleEventPropagation}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              if (!chip.href) return;
+              if (chip.external) window.open(chip.href, "_blank", "noopener");
+              else router.push(chip.href);
+            }}
+          >
+            {icon}
+            <div className="truncate text-caption-sm-regular">{chip.label}</div>
+          </div>
+        ))}
+      </>
+    );
   };
 
   return (
@@ -444,22 +514,12 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="attachment_count"
         shouldRenderProperty={(properties) => !!properties.attachment_count && !!issue.attachment_count}
       >
-        <Tooltip
-          tooltipHeading={t("common.attachments")}
-          tooltipContent={`${issue.attachment_count}`}
-          isMobile={isMobile}
-          renderByDefault={false}
-        >
-          {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-          <div
-            className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
-            onFocus={handleEventPropagation}
-            onClick={handleEventPropagation}
-          >
-            <Paperclip className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
-            <div className="text-caption-sm-regular">{issue.attachment_count}</div>
-          </div>
-        </Tooltip>
+        {renderChipBlock(
+          "attachments",
+          attachmentChips,
+          issue.attachment_count ?? 0,
+          <Paperclip className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+        )}
       </WithDisplayPropertiesHOC>
 
       {/* link */}
@@ -468,23 +528,25 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="link"
         shouldRenderProperty={(properties) => !!properties.link && !!issue.link_count}
       >
-        <Tooltip
-          tooltipHeading={t("common.links")}
-          tooltipContent={`${issue.link_count}`}
-          isMobile={isMobile}
-          renderByDefault={false}
-        >
-          {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-          <div
-            className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
-            onFocus={handleEventPropagation}
-            onClick={handleEventPropagation}
-          >
-            <LinkIcon className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
-            <div className="text-caption-sm-regular">{issue.link_count}</div>
-          </div>
-        </Tooltip>
+        {renderChipBlock(
+          "links",
+          linkChips,
+          issue.link_count ?? 0,
+          <LinkIcon className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+        )}
       </WithDisplayPropertiesHOC>
+
+      {/* pages */}
+      {pageChips.length > 0 && (
+        <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="link">
+          {renderChipBlock(
+            "pages",
+            pageChips,
+            pageChips.length,
+            <PageIcon className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+          )}
+        </WithDisplayPropertiesHOC>
+      )}
 
       {/* label */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="labels">

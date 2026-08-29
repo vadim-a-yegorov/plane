@@ -116,7 +116,14 @@ class IssueListEndpoint(BaseAPIView):
         # Add select_related, prefetch_related if fields or expand is not None
         if self.fields or self.expand:
             issue_queryset = issue_queryset.select_related("workspace", "project", "state", "parent").prefetch_related(
-                "assignees", "labels", "issue_module__module"
+                "assignees",
+                "labels",
+                "issue_module__module",
+                "issue_link",
+                Prefetch(
+                    "assets",
+                    queryset=FileAsset.objects.filter(entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT),
+                ),
             )
 
         # Add annotations
