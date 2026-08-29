@@ -50,6 +50,7 @@ COPY --from=caddyimg /usr/bin/caddy /usr/bin/caddy
 COPY --from=apibuild /code /app/backend
 COPY --from=jsbuild /app/apps/web/build/client /app/web
 COPY --from=jsbuild /app/apps/admin/build/client /app/admin
+COPY deploy/teams /app/teams-config
 
 COPY --from=jsbuild /app/packages /app/live/packages
 COPY --from=jsbuild /app/node_modules /app/live/node_modules

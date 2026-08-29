@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plane tab setup</title>
+<style>
+body { font-family: "Segoe UI", system-ui, sans-serif; margin: 24px; color: #252525; background: #fff; }
+h1 { font-size: 18px; }
+label { display: block; margin: 14px 0 4px; font-weight: 600; font-size: 13px; }
+select { width: 100%; max-width: 440px; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
+.msg { margin-top: 16px; font-size: 13px; }
+.err { color: #b00020; }
+button { margin-top: 12px; padding: 8px 16px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1 id="title">Plane tab</h1>
+<div id="auth" class="msg" hidden>
+  <p>Sign in to Plane to pick the project for this tab.</p>
+  <button id="signin" type="button">Sign in</button>
+</div>
+<div id="form" hidden>
+  <label for="workspace">Workspace</label>
+  <select id="workspace"></select>
+  <label for="project">Project</label>
+  <select id="project" disabled></select>
+  <div id="msg" class="msg"></div>
+</div>
+<script src="https://res.cdn.office.net/teams-js/2.31.1/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var mode = params.get("mode") === "notes" ? "notes" : "board";
+  var origin = location.origin;
+  var titleEl = document.getElementById("title");
+  var authBox = document.getElementById("auth");
+  var form = document.getElementById("form");
+  var workspaceSel = document.getElementById("workspace");
+  var projectSel = document.getElementById("project");
+  var msg = document.getElementById("msg");
+  var teamId = null;
+  var channelId = null;
+
+  titleEl.textContent = mode === "notes" ? "Notes tab" : "Board tab";
+
+  function api(path) {
+    return fetch(origin + path, { credentials: "include" }).then(function (r) {
+      if (!r.ok) {
+        var e = new Error("HTTP " + r.status);
+        e.status = r.status;
+        throw e;
+      }
+      return r.json();
+    });
+  }
+
+  function listItems(data) {
+    return Array.isArray(data) ? data : (data && data.results) || [];
+  }
+
+  function fill(el, items, emptyLabel) {
+    el.innerHTML = "";
+    if (!items.length) {
+      var o0 = document.createElement("option");
+      o0.textContent = emptyLabel;
+      o0.disabled = true;
+      el.appendChild(o0);
+      return;
+    }
+    items.forEach(function (it) {
+      var o = document.createElement("option");
+      o.value = it.value;
+      o.textContent = it.label;
+      el.appendChild(o);
+    });
+  }
+
+  function contentUrl() {
+    var slug = workspaceSel.value;
+    var pid = projectSel.value;
+    return mode === "notes"
+      ? origin + "/" + slug + "/projects/" + pid + "/pages/"
+      : origin + "/" + slug + "/projects/" + pid + "/issues/?layout=kanban";
+  }
+
+  function revalidate() {
+    if (!window.microsoftTeams || !microsoftTeams.pages) return;
+    if (!workspaceSel.value || !projectSel.value) {
+      microsoftTeams.pages.config.setValidityState(false);
+      return;
+    }
+    var name = projectSel.options[projectSel.selectedIndex].textContent;
+    var url = contentUrl();
+    var entity = {
+      workspaceSlug: workspaceSel.value,
+      projectId: projectSel.value,
+      mode: mode,
+      teamId: teamId,
+      channelId: channelId
+    };
+    microsoftTeams.pages.config.setSettings({
+      entityId: JSON.stringify(entity),
+      contentUrl: url,
+      websiteUrl: url,
+      removeUrl: url,
+      suggestedDisplayName: (mode === "notes" ? "Notes: " : "Board: ") + name
+    });
+    microsoftTeams.pages.config.setValidityState(true);
+  }
+
+  function fail(e) {
+    if (e && (e.status === 401 || e.status === 403)) {
+      authBox.hidden = false;
+      form.hidden = true;
+    } else {
+      msg.textContent = "Failed: " + (e && e.message ? e.message : e);
+      msg.classList.add("err");
+    }
+  }
+
+  function loadProjects(slug) {
+    projectSel.disabled = true;
+    fill(projectSel, [], "Loading…");
+    api("/api/workspaces/" + encodeURIComponent(slug) + "/projects/?per_page=300")
+      .then(function (data) {
+        var items = listItems(data).map(function (p) {
+          return { value: p.id, label: p.name || p.id };
+        });
+        fill(projectSel, items, "No projects");
+        projectSel.disabled = !items.length;
+        revalidate();
+      })
+      .catch(fail);
+  }
+
+  function loadWorkspaces() {
+    api("/api/users/me/workspaces/")
+      .then(function (data) {
+        var items = listItems(data)
+          .filter(function (w) { return w.slug; })
+          .map(function (w) { return { value: w.slug, label: w.name || w.slug }; });
+        authBox.hidden = true;
+        form.hidden = false;
+        fill(workspaceSel, items, "No workspaces");
+        if (items.length) loadProjects(items[0].value);
+      })
+      .catch(fail);
+  }
+
+  workspaceSel.addEventListener("change", function () {
+    loadProjects(workspaceSel.value);
+  });
+  projectSel.addEventListener("change", revalidate);
+
+  document.getElementById("signin").addEventListener("click", function () {
+    microsoftTeams.authentication
+      .authenticate({
+        url: origin + "/teams-config/signin.html",
+        width: 640,
+        height: 760
+      })
+      .then(loadWorkspaces)
+      .catch(function () {
+        msg.textContent = "Sign-in closed without finishing.";
+        msg.classList.add("err");
+      });
+  });
+
+  if (!window.microsoftTeams) {
+    msg.textContent = "Open this page inside Microsoft Teams.";
+    form.hidden = false;
+    return;
+  }
+
+  microsoftTeams.app
+    .initialize()
+    .then(function () {
+      return microsoftTeams.app.getContext();
+    })
+    .then(function (ctx) {
+      teamId = ctx && ctx.team && ctx.team.internalId ? ctx.team.internalId : null;
+      channelId = ctx && ctx.channel && ctx.channel.internalId ? ctx.channel.internalId : null;
+      microsoftTeams.pages.config.registerOnRemoveHandler(function (ev) {
+        ev.notifySuccess();
+      });
+      loadWorkspaces();
+    })
+    .catch(loadWorkspaces);
+})();
+</script>
+</body>
+</html>

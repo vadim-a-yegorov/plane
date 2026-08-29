@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in to Plane</title>
+<style>
+body { font-family: "Segoe UI", system-ui, sans-serif; margin: 24px; color: #252525; background: #fff; }
+button { margin-top: 12px; padding: 8px 16px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5; cursor: pointer; }
+</style>
+</head>
+<body>
+<p id="status">Checking session…</p>
+<button id="go" type="button" hidden>Open sign-in page</button>
+<script src="https://res.cdn.office.net/teams-js/2.31.1/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
+<script>
+(function () {
+  var status = document.getElementById("status");
+  var go = document.getElementById("go");
+  var tries = 0;
+
+  function done() {
+    status.textContent = "Signed in.";
+    go.hidden = true;
+    if (window.microsoftTeams) {
+      microsoftTeams.app.initialize().then(function () {
+        microsoftTeams.authentication.notifySuccess();
+      });
+    }
+  }
+
+  function check() {
+    fetch(location.origin + "/api/users/me/", { credentials: "include" })
+      .then(function (r) {
+        if (r.ok) {
+          done();
+          return;
+        }
+        tries += 1;
+        status.textContent = "Not signed in yet. Open the sign-in page, finish signing in there — this window closes by itself.";
+        go.hidden = false;
+        if (tries < 150) setTimeout(check, 2000);
+      })
+      .catch(function () {
+        setTimeout(check, 2000);
+      });
+  }
+
+  go.addEventListener("click", function () {
+    window.open(location.origin, "_blank");
+  });
+
+  check();
+})();
+</script>
+</body>
+</html>

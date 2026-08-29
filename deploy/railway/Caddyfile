@@ -32,6 +32,12 @@
 		reverse_proxy localhost:3004
 	}
 
+	handle_path /teams-config* {
+		root * /app/teams-config
+		try_files {path} /config.html
+		file_server
+	}
+
 	handle_path /god-mode* {
 		root * /app/admin
 		try_files {path} {path}/ /index.html
