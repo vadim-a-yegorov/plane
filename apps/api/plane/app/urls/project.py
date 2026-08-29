@@ -6,7 +6,6 @@ from django.urls import path
 
 from plane.app.views import (
     ProjectViewSet,
-    DeployBoardViewSet,
     ProjectInvitationsViewset,
     ProjectMemberViewSet,
     ProjectMemberUserEndpoint,
@@ -108,16 +107,6 @@ urlpatterns = [
         "workspaces/<str:slug>/user-favorite-projects/<uuid:project_id>/",
         ProjectFavoritesViewSet.as_view({"delete": "destroy"}),
         name="project-favorite",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/project-deploy-boards/",
-        DeployBoardViewSet.as_view({"get": "list", "post": "create"}),
-        name="project-deploy-board",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/project-deploy-boards/<uuid:pk>/",
-        DeployBoardViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
-        name="project-deploy-board",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/archive/",

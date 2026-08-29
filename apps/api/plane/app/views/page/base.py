@@ -142,8 +142,9 @@ class PageViewSet(BaseViewSet):
         )
 
     def create(self, request, slug, project_id):
+        data = {key: value for key, value in request.data.items() if key != "parent"}
         serializer = PageSerializer(
-            data=request.data,
+            data=data,
             context={
                 "project_id": project_id,
                 "owned_by_id": request.user.id,
@@ -178,13 +179,10 @@ class PageViewSet(BaseViewSet):
             if page.is_locked:
                 return Response({"error": "Page is locked"}, status=status.HTTP_400_BAD_REQUEST)
 
-            parent = request.data.get("parent", None)
-            if parent:
-                _ = Page.objects.get(
-                    pk=parent,
-                    workspace__slug=slug,
-                    projects__id=project_id,
-                    project_pages__deleted_at__isnull=True,
+            if request.data.get("parent"):
+                return Response(
+                    {"error": "Nested pages are disabled"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             # Only update access if the page owner is the requesting  user

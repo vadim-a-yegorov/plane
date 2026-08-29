@@ -24,18 +24,7 @@ from plane.app.views import (
     WorkspaceProjectMemberEndpoint,
     WorkspaceUserPropertiesEndpoint,
     WorkspaceStatesEndpoint,
-    WorkspaceEstimatesEndpoint,
     ExportWorkspaceUserActivityEndpoint,
-    WorkspaceModulesEndpoint,
-    WorkspaceCyclesEndpoint,
-    WorkspaceFavoriteEndpoint,
-    WorkspaceFavoriteGroupEndpoint,
-    WorkspaceDraftIssueViewSet,
-    QuickLinkViewSet,
-    UserRecentVisitViewSet,
-    WorkspaceHomePreferenceViewSet,
-    WorkspaceStickyViewSet,
-    WorkspaceUserPreferenceViewSet,
 )
 
 
@@ -168,93 +157,5 @@ urlpatterns = [
         "workspaces/<str:slug>/states/",
         WorkspaceStatesEndpoint.as_view(),
         name="workspace-state",
-    ),
-    path(
-        "workspaces/<str:slug>/estimates/",
-        WorkspaceEstimatesEndpoint.as_view(),
-        name="workspace-estimate",
-    ),
-    path(
-        "workspaces/<str:slug>/modules/",
-        WorkspaceModulesEndpoint.as_view(),
-        name="workspace-modules",
-    ),
-    path(
-        "workspaces/<str:slug>/cycles/",
-        WorkspaceCyclesEndpoint.as_view(),
-        name="workspace-cycles",
-    ),
-    path(
-        "workspaces/<str:slug>/user-favorites/",
-        WorkspaceFavoriteEndpoint.as_view(),
-        name="workspace-user-favorites",
-    ),
-    path(
-        "workspaces/<str:slug>/user-favorites/<uuid:favorite_id>/",
-        WorkspaceFavoriteEndpoint.as_view(),
-        name="workspace-user-favorites",
-    ),
-    path(
-        "workspaces/<str:slug>/user-favorites/<uuid:favorite_id>/group/",
-        WorkspaceFavoriteGroupEndpoint.as_view(),
-        name="workspace-user-favorites-groups",
-    ),
-    path(
-        "workspaces/<str:slug>/draft-issues/",
-        WorkspaceDraftIssueViewSet.as_view({"get": "list", "post": "create"}),
-        name="workspace-draft-issues",
-    ),
-    path(
-        "workspaces/<str:slug>/draft-issues/<uuid:pk>/",
-        WorkspaceDraftIssueViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
-        name="workspace-drafts-issues",
-    ),
-    path(
-        "workspaces/<str:slug>/draft-to-issue/<uuid:draft_id>/",
-        WorkspaceDraftIssueViewSet.as_view({"post": "create_draft_to_issue"}),
-        name="workspace-drafts-issues",
-    ),
-    # quick link
-    path(
-        "workspaces/<str:slug>/quick-links/",
-        QuickLinkViewSet.as_view({"get": "list", "post": "create"}),
-        name="workspace-quick-links",
-    ),
-    path(
-        "workspaces/<str:slug>/quick-links/<uuid:pk>/",
-        QuickLinkViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
-        name="workspace-quick-links",
-    ),
-    # Widgets
-    path(
-        "workspaces/<str:slug>/home-preferences/",
-        WorkspaceHomePreferenceViewSet.as_view(),
-        name="workspace-home-preference",
-    ),
-    path(
-        "workspaces/<str:slug>/home-preferences/<str:key>/",
-        WorkspaceHomePreferenceViewSet.as_view(),
-        name="workspace-home-preference",
-    ),
-    path(
-        "workspaces/<str:slug>/recent-visits/",
-        UserRecentVisitViewSet.as_view({"get": "list"}),
-        name="workspace-recent-visits",
-    ),
-    path(
-        "workspaces/<str:slug>/stickies/",
-        WorkspaceStickyViewSet.as_view({"get": "list", "post": "create"}),
-        name="workspace-sticky",
-    ),
-    path(
-        "workspaces/<str:slug>/stickies/<uuid:pk>/",
-        WorkspaceStickyViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
-        name="workspace-sticky",
-    ),
-    # User Preference
-    path(
-        "workspaces/<str:slug>/sidebar-preferences/",
-        WorkspaceUserPreferenceViewSet.as_view(),
-        name="workspace-user-preference",
     ),
 ]

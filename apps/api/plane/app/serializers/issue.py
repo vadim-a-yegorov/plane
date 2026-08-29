@@ -22,6 +22,7 @@ from plane.db.models import (
     Issue,
     IssueActivity,
     IssueComment,
+    Project,
     ProjectUserProperty,
     IssueAssignee,
     IssueSubscriber,
@@ -111,6 +112,10 @@ class IssueCreateSerializer(BaseSerializer):
             "created_at",
             "updated_at",
             "completed_at",
+            "description_json",
+            "description_html",
+            "description_binary",
+            "description_stripped",
         ]
 
     def to_representation(self, instance):
@@ -124,6 +129,14 @@ class IssueCreateSerializer(BaseSerializer):
     def validate(self, attrs):
         allow_triage = self.context.get("allow_triage_state", False)
         state_manager = State.triage_objects if allow_triage else State.objects
+
+        project_id = self.context.get("project_id")
+        if (
+            project_id
+            and (attrs.get("start_date") is not None or attrs.get("target_date") is not None)
+            and not Project.objects.filter(pk=project_id, calendar_enabled=True).exists()
+        ):
+            raise serializers.ValidationError("Dates are disabled for this project")
 
         if (
             attrs.get("start_date", None) is not None
