@@ -106,9 +106,10 @@ Relay implementation (2026-08-29, build order step 6 done in-process).
 6. Tab config page (deploy/teams/config.html) now also POSTs the binding (project_id, team_id, channel_id, tenant_id from TeamsJS context) on save; failure only shows a warning, tab save itself is unaffected. CSRF is not an obstacle: BaseSessionAuthentication.enforce_csrf is a no-op in this fork.
 7. Env: MS_APP_ID, MS_APP_PASSWORD, MS_BOT_SERVICE_URL (default https://smba.trafficmanager.net/teams/). Until the Entra app exists the sinks return "bot not configured" and the relay still answers 200.
 8. Verified locally: py_compile all new files, makemigrations --check reports no drift after verbose_name fix ("Last Modified By"), manage.py check clean, reverse() resolves all three URL names.
+9. Verified live (2026-08-29, deploy a0b5af8d): migration 0124 applied; signed POST with the webhook's plane_wh_ secret → 200 with sink report {"channel":"bot not configured","dm":"bot not configured"}; tampered signature → 403; WebhookSerializer._validate_webhook_url accepts the app's own host (WEBHOOK_ALLOWED_HOSTS=plane-production-a21c.up.railway.app set in Railway env — required, the loop-back guard auto-disallows the request host otherwise); probe webhook/project/binding rows deleted after the test, webhook row kept.
 
 Open items.
 
-1. Relay hosting — resolved: in-process, no separate Railway service.
+1. MS_APP_ID / MS_APP_PASSWORD (bot Entra app) not yet set — until then both sinks answer "bot not configured".
 2. Distribution inside the tenant: sideload during build, org-wide app policy for the 4-office rollout.
 3. Activity feed notifications — keep as v2 if DM noise needs a quieter channel.
