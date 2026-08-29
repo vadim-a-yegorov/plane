@@ -34,7 +34,15 @@ class ProjectSerializer(BaseSerializer):
     class Meta:
         model = Project
         fields = "__all__"
-        read_only_fields = ["workspace", "deleted_at"]
+        read_only_fields = [
+            "workspace",
+            "deleted_at",
+            "emoji",
+            "icon_prop",
+            "logo_props",
+            "cover_image",
+            "cover_image_asset",
+        ]
 
     def validate_name(self, name):
         project_id = self.instance.id if self.instance else None
@@ -75,6 +83,9 @@ class ProjectSerializer(BaseSerializer):
         return identifier
 
     def validate(self, data):
+        for field in ("emoji", "icon_prop", "logo_props", "cover_image", "cover_image_asset"):
+            data.pop(field, None)
+
         # Validate description content for security
         if "description_html" in data and data["description_html"]:
             is_valid, error_msg, sanitized_html = validate_html_content(str(data["description_html"]))

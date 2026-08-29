@@ -8,7 +8,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
-import { DraftIcon, HomeIcon, PiChatLogo, YourWorkIcon, DashboardIcon } from "@plane/propel/icons";
+import { DraftIcon, PiChatLogo, YourWorkIcon, DashboardIcon } from "@plane/propel/icons";
 import { EUserWorkspaceRoles } from "@plane/types";
 // hooks
 import { useUserPermissions, useUser } from "@/hooks/store/user";
@@ -23,13 +23,6 @@ export const SidebarUserMenu = observer(function SidebarUserMenu() {
   const { data: currentUser } = useUser();
 
   const SIDEBAR_USER_MENU_ITEMS = [
-    {
-      key: "home",
-      labelTranslationKey: "sidebar.home",
-      href: `/${workspaceSlug.toString()}/`,
-      access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
-      Icon: HomeIcon,
-    },
     {
       key: "dashboards",
       labelTranslationKey: "workspace_dashboards",
