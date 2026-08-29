@@ -229,13 +229,6 @@ export const WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS_LINKS: IWorkspaceSidebar
 ];
 
 export const WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS: Record<string, IWorkspaceSidebarNavigationItem> = {
-  home: {
-    key: "home",
-    labelTranslationKey: "home.title",
-    href: `/`,
-    access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
-    highlight: (pathname: string, url: string) => pathname === url,
-  },
   inbox: {
     key: "inbox",
     labelTranslationKey: "notification.label",
@@ -281,7 +274,7 @@ export const WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS: Record<string, IWorkspac
 };
 
 export const WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS_LINKS: IWorkspaceSidebarNavigationItem[] = [
-  WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["home"],
+  WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["your-work"],
   WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["your-pages"],
 ];
 

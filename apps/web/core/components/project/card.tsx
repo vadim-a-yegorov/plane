@@ -13,7 +13,6 @@ import { ArchiveRestoreIcon, Settings, UserPlus } from "lucide-react";
 import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
 import { Button } from "@plane/propel/button";
-import { Logo } from "@plane/propel/emoji-icon-picker";
 import { LinkIcon, LockIcon, NewTabIcon, TrashIcon, CheckIcon } from "@plane/propel/icons";
 import { setPromiseToast, setToast, TOAST_TYPE } from "@plane/propel/toast";
 import { Tooltip } from "@plane/propel/tooltip";
@@ -29,7 +28,6 @@ import { useUserPermissions } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
-import { CoverImage } from "@/components/common/cover-image";
 import { DeleteProjectModal } from "./delete-project-modal";
 import { JoinProjectModal } from "./join-project-modal";
 import { ArchiveRestoreProjectModal } from "./archive-restore-modal";
@@ -210,26 +208,14 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
         )}
       >
         <ContextMenu parentRef={projectCardRef} items={MENU_ITEMS} />
-        <div className="relative h-[118px] w-full rounded-t">
-          <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/60 to-transparent" />
-
-          <CoverImage
-            src={project.cover_image_url}
-            alt={project.name}
-            className="absolute top-0 left-0 h-full w-full rounded-t"
-          />
-
-          <div className="absolute bottom-4 z-[1] flex h-10 w-full items-center justify-between gap-3 px-4">
+        <div className="relative w-full rounded-t px-4 py-4">
+          <div className="flex h-10 w-full items-center justify-between gap-3">
             <div className="flex flex-grow items-center gap-2.5 truncate">
-              <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-sm bg-white/10">
-                <Logo logo={project.logo_props} size={18} />
-              </div>
-
               <div className="flex w-full flex-col justify-between gap-0.5 truncate">
-                <h3 className="truncate font-semibold text-on-color">{project.name}</h3>
+                <h3 className="text-default truncate font-semibold">{project.name}</h3>
                 <span className="flex items-center gap-1.5">
-                  <p className="text-11 font-medium text-on-color">{project.identifier} </p>
-                  {project.network === 0 && <LockIcon className="h-2.5 w-2.5 text-on-color" />}
+                  <p className="text-default text-11 font-medium">{project.identifier} </p>
+                  {project.network === 0 && <LockIcon className="text-default h-2.5 w-2.5" />}
                 </span>
               </div>
             </div>
@@ -237,20 +223,20 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
             {!isArchived && (
               <div data-prevent-progress className="flex h-full flex-shrink-0 items-center gap-2">
                 <button
-                  className="flex h-6 w-6 items-center justify-center rounded-sm bg-white/10"
+                  className="flex h-6 w-6 items-center justify-center rounded-sm bg-layer-3"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
                     handleCopyText();
                   }}
                 >
-                  <LinkIcon className="h-3 w-3 text-on-color" />
+                  <LinkIcon className="text-default h-3 w-3" />
                 </button>
                 {shouldRenderFavorite && (
                   <FavoriteStar
-                    buttonClassName="h-6 w-6 bg-white/10 rounded-sm"
+                    buttonClassName="h-6 w-6 bg-layer-3 rounded-sm"
                     iconClassName={cn("h-3 w-3", {
-                      "text-on-color": !project.is_favorite,
+                      "text-default": !project.is_favorite,
                     })}
                     onClick={(e) => {
                       e.preventDefault();
@@ -307,7 +293,8 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
             {isArchived ? (
               hasAdminRole && (
                 <div className="flex items-center justify-center gap-2">
-                  <div
+                  <button
+                    type="button"
                     className="flex items-center justify-center text-11 font-medium text-placeholder hover:text-secondary"
                     onClick={(e) => {
                       e.preventDefault();
@@ -319,8 +306,9 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                       <ArchiveRestoreIcon className="h-3.5 w-3.5" />
                       Restore
                     </div>
-                  </div>
-                  <div
+                  </button>
+                  <button
+                    type="button"
                     className="flex items-center justify-center text-11 font-medium text-placeholder hover:text-secondary"
                     onClick={(e) => {
                       e.preventDefault();
@@ -329,7 +317,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                     }}
                   >
                     <TrashIcon className="h-3.5 w-3.5" />
-                  </div>
+                  </button>
                 </div>
               )
             ) : (

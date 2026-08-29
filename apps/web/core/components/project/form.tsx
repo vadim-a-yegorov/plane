@@ -13,19 +13,13 @@ import { NETWORK_CHOICES } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 // plane imports
 import { Button } from "@plane/propel/button";
-import { EmojiPicker, EmojiIconPickerTypes, Logo } from "@plane/propel/emoji-icon-picker";
-import { LockIcon } from "@plane/propel/icons";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import { Tooltip } from "@plane/propel/tooltip";
-import { EFileAssetType } from "@plane/types";
 import type { IProject, IWorkspace } from "@plane/types";
 import { CustomSelect, TextArea } from "@plane/ui";
 import { renderFormattedDate } from "@plane/utils";
-import { CoverImage } from "@/components/common/cover-image";
-import { ImagePickerPopover } from "@/components/core/image-picker-popover";
 import { TimezoneSelect } from "@/components/global";
 // helpers
-import { handleCoverImageChange } from "@/helpers/cover-image.helper";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { usePlatformOS } from "@/hooks/use-platform-os";
@@ -46,7 +40,6 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
   const { project, workspaceSlug, projectId, isAdmin } = props;
   const { t } = useTranslation();
   // states
-  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   // store hooks
   const { updateProject } = useProject();
@@ -55,7 +48,6 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
   // form info
   const {
     handleSubmit,
-    watch,
     control,
     setValue,
     setError,
@@ -68,9 +60,6 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
       workspace: (project.workspace as IWorkspace).id,
     },
   });
-  // derived values
-  const currentNetwork = NETWORK_CHOICES.find((n) => n.key === project?.network);
-  const coverImage = watch("cover_image_url");
 
   useEffect(() => {
     if (project && projectId !== getValues("id")) {
@@ -93,13 +82,13 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
   const handleUpdateChange = async (payload: Partial<IProject>) => {
     if (!workspaceSlug || !project) return;
     return updateProject(workspaceSlug.toString(), project.id, payload)
-      .then(() => {
+      .then(() =>
         setToast({
           type: TOAST_TYPE.SUCCESS,
           title: t("toast.success"),
           message: t("project_settings.general.toast.success"),
-        });
-      })
+        })
+      )
       .catch((err) => {
         try {
           // Handle the new error format where codes are nested in arrays under field names
@@ -161,39 +150,15 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
       identifier: formData.identifier,
       description: formData.description,
 
-      logo_props: formData.logo_props,
       timezone: formData.timezone,
     };
-
-    // Handle cover image changes
-    try {
-      const coverImagePayload = await handleCoverImageChange(project.cover_image_url, formData.cover_image_url, {
-        workspaceSlug: workspaceSlug.toString(),
-        entityIdentifier: project.id,
-        entityType: EFileAssetType.PROJECT_COVER,
-        isUserAsset: false,
-      });
-
-      if (coverImagePayload) {
-        Object.assign(payload, coverImagePayload);
-      }
-    } catch (error) {
-      console.error("Error handling cover image:", error);
-      setToast({
-        type: TOAST_TYPE.ERROR,
-        title: t("toast.error"),
-        message: error instanceof Error ? error.message : "Failed to process cover image",
-      });
-      setIsLoading(false);
-      return;
-    }
 
     if (project.identifier !== formData.identifier)
       await projectService
         .checkProjectIdentifierAvailability(workspaceSlug, payload.identifier ?? "")
         .then(async (res) => {
-          if (res.exists) setError("identifier", { message: t("common.identifier_already_exists") });
-          else await handleUpdateChange(payload);
+          if (res.exists) return setError("identifier", { message: t("common.identifier_already_exists") });
+          return handleUpdateChange(payload);
         });
     else await handleUpdateChange(payload);
     setTimeout(() => {
@@ -203,78 +168,6 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="relative h-44 w-full">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <CoverImage src={coverImage} alt="Project cover image" className="h-44 w-full rounded-md" />
-        <div className="absolute bottom-4 z-5 flex w-full items-end justify-between gap-3 px-4">
-          <div className="flex flex-grow gap-3 truncate">
-            <Controller
-              control={control}
-              name="logo_props"
-              render={({ field: { value, onChange } }) => (
-                <EmojiPicker
-                  iconType="material"
-                  closeOnSelect={false}
-                  isOpen={isOpen}
-                  handleToggle={(val: boolean) => setIsOpen(val)}
-                  className="flex items-center justify-center"
-                  buttonClassName="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-lg bg-white/10"
-                  label={<Logo logo={value} size={28} />}
-                  // TODO: fix types
-                  onChange={(val: any) => {
-                    let logoValue = {};
-
-                    if (val?.type === "emoji")
-                      logoValue = {
-                        value: val.value,
-                      };
-                    else if (val?.type === "icon") logoValue = val.value;
-
-                    onChange({
-                      in_use: val?.type,
-                      [val?.type]: logoValue,
-                    });
-                    setIsOpen(false);
-                  }}
-                  defaultIconColor={value?.in_use && value.in_use === "icon" ? value?.icon?.color : undefined}
-                  defaultOpen={
-                    value.in_use && value.in_use === "emoji" ? EmojiIconPickerTypes.EMOJI : EmojiIconPickerTypes.ICON
-                  }
-                  disabled={!isAdmin}
-                />
-              )}
-            />
-            <div className="flex flex-col gap-1 truncate text-on-color">
-              <span className="truncate text-16 font-semibold">{watch("name")}</span>
-              <span className="flex items-center gap-2 text-13">
-                <span>{watch("identifier")} .</span>
-                <span className="flex items-center gap-1.5">
-                  {project.network === 0 && <LockIcon className="h-2.5 w-2.5 text-on-color" />}
-                  {currentNetwork && t(currentNetwork?.i18n_label)}
-                </span>
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-shrink-0 justify-center">
-            <div>
-              <Controller
-                control={control}
-                name="cover_image_url"
-                render={({ field: { value, onChange } }) => (
-                  <ImagePickerPopover
-                    label={t("change_cover")}
-                    control={control}
-                    onChange={onChange}
-                    value={value ?? null}
-                    disabled={!isAdmin}
-                    projectId={project.id}
-                  />
-                )}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
       <div className="mt-8 flex flex-col gap-8">
         <div className="flex flex-col gap-1">
           <h4 className="text-13">{t("common.project_name")}</h4>
@@ -431,9 +324,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                 <>
                   <TimezoneSelect
                     value={value}
-                    onChange={(value: string) => {
-                      onChange(value);
-                    }}
+                    onChange={(val: string) => onChange(val)}
                     error={Boolean(errors.timezone)}
                     buttonClassName="!border-subtle !shadow-none font-medium rounded-md"
                     disabled={!isAdmin}
