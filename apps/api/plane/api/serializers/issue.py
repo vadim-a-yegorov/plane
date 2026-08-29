@@ -12,6 +12,7 @@ from rest_framework import serializers
 
 # Module imports
 from plane.db.models import (
+    Project,
     Issue,
     IssueType,
     IssueActivity,
@@ -73,6 +74,17 @@ class IssueSerializer(BaseSerializer):
         exclude = ["description_json", "description_stripped"]
 
     def validate(self, data):
+        for key in ("description_html", "description_binary", "description_json", "description_stripped"):
+            data.pop(key, None)
+
+        project_id = self.context.get("project_id")
+        if (
+            project_id
+            and (data.get("start_date") is not None or data.get("target_date") is not None)
+            and not Project.objects.filter(pk=project_id, calendar_enabled=True).exists()
+        ):
+            raise serializers.ValidationError("Dates are disabled for this project")
+
         if (
             data.get("start_date", None) is not None
             and data.get("target_date", None) is not None
