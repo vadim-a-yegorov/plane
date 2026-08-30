@@ -12,8 +12,8 @@ import { cn } from "@plane/utils";
 
 export const YOUR_PAGES_TABS = [
   { key: "all", label: "All" },
-  { key: "assigned", label: "Assigned to you" },
-  { key: "created", label: "Created by you" },
+  { key: "assigned", label: "Assigned" },
+  { key: "created", label: "Created" },
   { key: "subscribed", label: "Subscribed" },
 ] as const;
 

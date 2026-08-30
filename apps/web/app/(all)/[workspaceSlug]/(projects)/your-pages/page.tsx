@@ -11,7 +11,7 @@ import { FlatPages, type TFlatPagesTab } from "./flat-pages";
 export default function YourPagesPage() {
   return (
     <>
-      <PageHead title="Pages" />
+      <PageHead title="Your pages" />
       <FlatPages tab="all" />
     </>
   );

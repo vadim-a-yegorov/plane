@@ -18,7 +18,7 @@ export default function YourPagesTabPage({ params }: Route.ComponentProps) {
 
   return (
     <>
-      <PageHead title={`Pages - ${tabId}`} />
+      <PageHead title={`Your pages - ${tabId}`} />
       <FlatPages tab={tabId as TFlatPagesTab} />
     </>
   );
