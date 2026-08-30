@@ -97,6 +97,7 @@ class PageViewSet(BaseViewSet):
             )
             .filter(parent__isnull=True)
             .filter(Q(owned_by=self.request.user) | Q(access=0))
+            .filter(archived_at__isnull=True)
             .prefetch_related("projects")
             .select_related("workspace")
             .select_related("owned_by")
