@@ -194,6 +194,22 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
     e.preventDefault();
   };
 
+  const handleChipClick = (e: SyntheticEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!workspaceSlug || !issue.project_id) return;
+    const workItemLink = generateWorkItemLink({
+      workspaceSlug: workspaceSlug.toString(),
+      projectId: issue.project_id,
+      issueId: issue.id,
+      projectIdentifier: projectDetails?.identifier,
+      sequenceId: issue.sequence_id,
+      isEpic,
+      isArchived: !!issue?.archived_at,
+    });
+    router.push(workItemLink);
+  };
+
   return (
     <div className={className}>
       {/* basic properties */}
@@ -454,7 +470,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
           <div
             className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
             onFocus={handleEventPropagation}
-            onClick={handleEventPropagation}
+            onClick={handleChipClick}
           >
             <Paperclip className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
             <div className="text-caption-sm-regular">{issue.attachment_count}</div>
@@ -476,9 +492,9 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         >
           {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
           <div
-            className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
+            className="flex h-5 flex-shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1 hover:border-accent-strong"
             onFocus={handleEventPropagation}
-            onClick={handleEventPropagation}
+            onClick={handleChipClick}
           >
             <LinkIcon className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
             <div className="text-caption-sm-regular">{issue.link_count}</div>
