@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useRef } from "react";
 import { Paperclip } from "lucide-react";
 import useSWR from "swr";
 // plane imports
@@ -49,6 +50,7 @@ const flatPagesService = new FlatPagesService();
 
 export function FlatPages({ tab }: { tab: TFlatPagesTab }) {
   const router = useAppRouter();
+  const parentRef = useRef<HTMLDivElement>(null);
   const { data: entries, error } = useSWR(`FLAT_PAGES_${tab}`, () => flatPagesService.getMyPages(tab), {
     revalidateIfStale: false,
     revalidateOnFocus: false,
@@ -60,29 +62,30 @@ export function FlatPages({ tab }: { tab: TFlatPagesTab }) {
     else window.open(entry.type === "file" ? (getFileURL(entry.href) ?? entry.href) : entry.href, "_blank", "noopener");
   };
 
+  if (error) return <div className="text-sm text-red-500 p-4">Failed to load.</div>;
+  if (!entries) return <div className="text-sm p-4 text-secondary">Loading...</div>;
+  if (entries.length === 0) return <div className="text-sm p-4 text-secondary">Nothing here yet.</div>;
+
   return (
-    <div className="flex h-full flex-col">
-      <div className="h-full overflow-y-auto">
-        {error && <div className="text-sm text-red-500 p-4">Failed to load.</div>}
-        {!error && !entries && <div className="text-sm p-4 text-secondary">Loading...</div>}
-        {entries?.length === 0 && <div className="text-sm p-4 text-secondary">Nothing here yet.</div>}
-        {entries?.map((entry) => (
-          <button
+    <div ref={parentRef} className="h-full overflow-y-auto">
+      {entries.map((entry) => {
+        const Icon = entry.type === "page" ? PageIcon : entry.type === "file" ? Paperclip : LinkIcon;
+        return (
+          <div
             key={`${entry.type}_${entry.id}`}
-            type="button"
             onClick={() => openEntry(entry)}
-            className="border-default flex w-full cursor-pointer items-center gap-2 border-b px-4 py-2 text-left hover:bg-layer-1"
+            className="group relative flex w-full cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 hover:bg-layer-transparent-hover active:bg-layer-transparent-active transition-colors"
           >
-            {entry.type === "page" && <PageIcon className="h-3.5 w-3.5 flex-shrink-0" />}
-            {entry.type === "file" && <Paperclip className="h-3.5 w-3.5 flex-shrink-0" />}
-            {entry.type === "link" && <LinkIcon className="h-3.5 w-3.5 flex-shrink-0" />}
-            <span className="text-sm truncate">{entry.name}</span>
-            <span className="text-xs ml-auto flex-shrink-0 text-secondary">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Icon className="h-4 w-4 text-tertiary flex-shrink-0" />
+              <span className="truncate text-13 font-medium">{entry.name}</span>
+            </div>
+            <span className="text-xs text-secondary flex-shrink-0">
               {new Date(entry.updated_at).toLocaleDateString()}
             </span>
-          </button>
-        ))}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
