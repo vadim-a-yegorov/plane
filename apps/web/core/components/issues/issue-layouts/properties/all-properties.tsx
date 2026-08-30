@@ -194,6 +194,22 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
     e.preventDefault();
   };
 
+  const handleChipClick = (e: SyntheticEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!workspaceSlug || !issue.project_id) return;
+    const workItemLink = generateWorkItemLink({
+      workspaceSlug: workspaceSlug.toString(),
+      projectId: issue.project_id,
+      issueId: issue.id,
+      projectIdentifier: projectDetails?.identifier,
+      sequenceId: issue.sequence_id,
+      isEpic,
+      isArchived: !!issue?.archived_at,
+    });
+    router.push(workItemLink);
+  };
+
   return (
     <div className={className}>
       {/* basic properties */}
@@ -444,22 +460,41 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="attachment_count"
         shouldRenderProperty={(properties) => !!properties.attachment_count && !!issue.attachment_count}
       >
-        <Tooltip
-          tooltipHeading={t("common.attachments")}
-          tooltipContent={`${issue.attachment_count}`}
-          isMobile={isMobile}
-          renderByDefault={false}
-        >
-          {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-          <div
-            className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
-            onFocus={handleEventPropagation}
-            onClick={handleEventPropagation}
-          >
-            <Paperclip className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
-            <div className="text-caption-sm-regular">{issue.attachment_count}</div>
-          </div>
-        </Tooltip>
+        {issue.issue_attachment && issue.issue_attachment.length > 0 ? (
+          issue.issue_attachment.length < 5 ? (
+            <div className="flex items-center gap-1">
+              {issue.issue_attachment.map((att) => (
+                <a
+                  key={att.id}
+                  href={att.asset}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Paperclip className="h-3 w-3" strokeWidth={2} />
+                  <span className="max-w-[100px] truncate">{att.attributes?.name || "Attachment"}</span>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <Tooltip
+              tooltipHeading={t("common.attachments")}
+              tooltipContent={`${issue.attachment_count}`}
+              isMobile={isMobile}
+              renderByDefault={false}
+            >
+              <div
+                className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
+                onFocus={handleEventPropagation}
+                onClick={handleEventPropagation}
+              >
+                <Paperclip className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+                <div className="text-caption-sm-regular">{issue.attachment_count}</div>
+              </div>
+            </Tooltip>
+          )
+        ) : null}
       </WithDisplayPropertiesHOC>
 
       {/* link */}
@@ -468,22 +503,84 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="link"
         shouldRenderProperty={(properties) => !!properties.link && !!issue.link_count}
       >
-        <Tooltip
-          tooltipHeading={t("common.links")}
-          tooltipContent={`${issue.link_count}`}
-          isMobile={isMobile}
-          renderByDefault={false}
-        >
-          {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-          <div
-            className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
-            onFocus={handleEventPropagation}
-            onClick={handleEventPropagation}
-          >
-            <LinkIcon className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
-            <div className="text-caption-sm-regular">{issue.link_count}</div>
-          </div>
-        </Tooltip>
+        {issue.issue_link && issue.issue_link.length > 0 ? (
+          issue.issue_link.length < 5 ? (
+            <div className="flex items-center gap-1">
+              {issue.issue_link.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <LinkIcon className="h-3 w-3" strokeWidth={2} />
+                  <span className="max-w-[100px] truncate">{link.title || link.url}</span>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <Tooltip
+              tooltipHeading={t("common.links")}
+              tooltipContent={`${issue.link_count}`}
+              isMobile={isMobile}
+              renderByDefault={false}
+            >
+              <div
+                className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
+                onFocus={handleEventPropagation}
+                onClick={handleEventPropagation}
+              >
+                <LinkIcon className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+                <div className="text-caption-sm-regular">{issue.link_count}</div>
+              </div>
+            </Tooltip>
+          )
+        ) : null}
+      </WithDisplayPropertiesHOC>
+
+      {/* pages */}
+      <WithDisplayPropertiesHOC
+        displayProperties={displayProperties}
+        displayPropertyKey="page"
+        shouldRenderProperty={(properties) => !!properties.page && issue.issue_pages && issue.issue_pages.length > 0}
+      >
+        {issue.issue_pages && issue.issue_pages.length > 0 && (
+          <>
+            {issue.issue_pages.length < 5 ? (
+              <div className="flex items-center gap-1">
+                {issue.issue_pages.map((page) => (
+                  <a
+                    key={page.id}
+                    href={`/${workspaceSlug}/projects/${issue.project_id}/pages/${page.id}`}
+                    className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FileText className="h-3 w-3" strokeWidth={2} />
+                    <span className="max-w-[100px] truncate">{page.name}</span>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <Tooltip
+                tooltipHeading="Pages"
+                tooltipContent={`${issue.issue_pages.length}`}
+                isMobile={isMobile}
+                renderByDefault={false}
+              >
+                <div
+                  className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
+                  onFocus={handleEventPropagation}
+                  onClick={handleEventPropagation}
+                >
+                  <FileText className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+                  <div className="text-caption-sm-regular">{issue.issue_pages.length}</div>
+                </div>
+              </Tooltip>
+            )}
+          </>
+        )}
       </WithDisplayPropertiesHOC>
 
       {/* label */}

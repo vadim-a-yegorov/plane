@@ -899,7 +899,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             if "issue_related" in self.expand:
                 related = []
                 for relation in instance.issue_related.all():
-                    issue = relation.issue
+                    issue = relation.related_issue
                     # If the related issue is deleted, skip it
                     if not issue:
                         continue
@@ -920,6 +920,42 @@ class IssueListDetailSerializer(serializers.Serializer):
                         }
                     )
                 data["issue_related"] = related
+
+            if "issue_link" in self.expand:
+                links = []
+                for link in instance.issue_link.all():
+                    links.append(
+                        {
+                            "id": link.id,
+                            "url": link.url,
+                            "title": link.title,
+                            "created_at": link.created_at,
+                        }
+                    )
+                data["issue_link"] = links
+
+            if "issue_attachment" in self.expand:
+                attachments = []
+                for asset in instance.issue_attachment.all():
+                    attachments.append(
+                        {
+                            "id": asset.id,
+                            "asset": asset.asset.url if asset.asset else None,
+                            "attributes": asset.attributes,
+                        }
+                    )
+                data["issue_attachment"] = attachments
+
+            if "issue_pages" in self.expand:
+                pages = []
+                for pagelog in instance.issue_page.all():
+                    pages.append(
+                        {
+                            "id": pagelog.page.id,
+                            "name": pagelog.page.name,
+                        }
+                    )
+                data["issue_pages"] = pages
 
         return data
 
