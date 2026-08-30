@@ -11,11 +11,8 @@ import useSWR from "swr";
 import { API_BASE_URL } from "@plane/constants";
 import { LinkIcon, PageIcon } from "@plane/propel/icons";
 import { getFileURL } from "@plane/utils";
-// components
-import { ListItem } from "@/components/core/list";
 // hooks
 import { useAppRouter } from "@/hooks/use-app-router";
-import { usePlatformOS } from "@/hooks/use-platform-os";
 // services
 import { APIService } from "@/services/api.service";
 
@@ -54,7 +51,6 @@ const flatPagesService = new FlatPagesService();
 export function FlatPages({ tab }: { tab: TFlatPagesTab }) {
   const router = useAppRouter();
   const parentRef = useRef<HTMLDivElement>(null);
-  const { isMobile } = usePlatformOS();
   const { data: entries, error } = useSWR(`FLAT_PAGES_${tab}`, () => flatPagesService.getMyPages(tab), {
     revalidateIfStale: false,
     revalidateOnFocus: false,
@@ -72,33 +68,24 @@ export function FlatPages({ tab }: { tab: TFlatPagesTab }) {
 
   return (
     <div ref={parentRef} className="h-full overflow-y-auto">
-      {entries.map((entry) => (
-        <ListItem
-          key={`${entry.type}_${entry.id}`}
-          title={entry.name}
-          itemLink={entry.href || "#"}
-          onItemClick={(e) => {
-            e.preventDefault();
-            openEntry(entry);
-          }}
-          prependTitleElement={
-            entry.type === "page" ? (
-              <PageIcon className="h-4 w-4 text-tertiary" />
-            ) : entry.type === "file" ? (
-              <Paperclip className="h-4 w-4 text-tertiary" />
-            ) : (
-              <LinkIcon className="h-4 w-4 text-tertiary" />
-            )
-          }
-          appendTitleElement={
+      {entries.map((entry) => {
+        const Icon = entry.type === "page" ? PageIcon : entry.type === "file" ? Paperclip : LinkIcon;
+        return (
+          <div
+            key={`${entry.type}_${entry.id}`}
+            onClick={() => openEntry(entry)}
+            className="group relative flex w-full cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 hover:bg-layer-transparent-hover active:bg-layer-transparent-active transition-colors"
+          >
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Icon className="h-4 w-4 text-tertiary flex-shrink-0" />
+              <span className="truncate text-13 font-medium">{entry.name}</span>
+            </div>
             <span className="text-xs text-secondary flex-shrink-0">
               {new Date(entry.updated_at).toLocaleDateString()}
             </span>
-          }
-          isMobile={isMobile}
-          parentRef={parentRef}
-        />
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
