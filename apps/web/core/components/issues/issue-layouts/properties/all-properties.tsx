@@ -4,13 +4,13 @@
  * See the LICENSE file for details.
  */
 
-import type { SyntheticEvent } from "react";
-import { useCallback, useMemo } from "react";
+import type { ReactNode, SyntheticEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { xor } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // icons
-import { Paperclip } from "lucide-react";
+import { FileText, Paperclip } from "lucide-react";
 // i18n
 import { useTranslation } from "@plane/i18n";
 import { LinkIcon, StartDatePropertyIcon, ViewsIcon, DueDatePropertyIcon } from "@plane/propel/icons";
@@ -54,6 +54,29 @@ export interface IIssueProperties {
   className: string;
   activeLayout: string;
   isEpic?: boolean;
+}
+
+function ChipGroup({ chips }: { chips: ReactNode[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const collapsible = chips.length >= 5 && !expanded;
+  return (
+    <div className="flex items-center gap-1">
+      {collapsible ? chips.slice(0, 4) : chips}
+      {collapsible && (
+        <button
+          type="button"
+          className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setExpanded((exp) => !exp);
+          }}
+        >
+          +{chips.length - 4} more
+        </button>
+      )}
+    </div>
+  );
 }
 
 export const IssueProperties = observer(function IssueProperties(props: IIssueProperties) {
@@ -460,41 +483,23 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="attachment_count"
         shouldRenderProperty={(properties) => !!properties.attachment_count && !!issue.attachment_count}
       >
-        {issue.issue_attachment && issue.issue_attachment.length > 0 ? (
-          issue.issue_attachment.length < 5 ? (
-            <div className="flex items-center gap-1">
-              {issue.issue_attachment.map((att) => (
-                <a
-                  key={att.id}
-                  href={att.asset}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Paperclip className="h-3 w-3" strokeWidth={2} />
-                  <span className="max-w-[100px] truncate">{att.attributes?.name || "Attachment"}</span>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <Tooltip
-              tooltipHeading={t("common.attachments")}
-              tooltipContent={`${issue.attachment_count}`}
-              isMobile={isMobile}
-              renderByDefault={false}
-            >
-              <div
-                className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
-                onFocus={handleEventPropagation}
-                onClick={handleEventPropagation}
+        {issue.issue_attachment && issue.issue_attachment.length > 0 && (
+          <ChipGroup
+            chips={issue.issue_attachment.map((att) => (
+              <a
+                key={att.id}
+                href={att.asset}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
+                onClick={(e) => e.stopPropagation()}
               >
-                <Paperclip className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
-                <div className="text-caption-sm-regular">{issue.attachment_count}</div>
-              </div>
-            </Tooltip>
-          )
-        ) : null}
+                <Paperclip className="h-3 w-3" strokeWidth={2} />
+                <span className="max-w-[100px] truncate">{att.attributes?.name || "Attachment"}</span>
+              </a>
+            ))}
+          />
+        )}
       </WithDisplayPropertiesHOC>
 
       {/* link */}
@@ -503,41 +508,23 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="link"
         shouldRenderProperty={(properties) => !!properties.link && !!issue.link_count}
       >
-        {issue.issue_link && issue.issue_link.length > 0 ? (
-          issue.issue_link.length < 5 ? (
-            <div className="flex items-center gap-1">
-              {issue.issue_link.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <LinkIcon className="h-3 w-3" strokeWidth={2} />
-                  <span className="max-w-[100px] truncate">{link.title || link.url}</span>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <Tooltip
-              tooltipHeading={t("common.links")}
-              tooltipContent={`${issue.link_count}`}
-              isMobile={isMobile}
-              renderByDefault={false}
-            >
-              <div
-                className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
-                onFocus={handleEventPropagation}
-                onClick={handleEventPropagation}
+        {issue.issue_link && issue.issue_link.length > 0 && (
+          <ChipGroup
+            chips={issue.issue_link.map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
+                onClick={(e) => e.stopPropagation()}
               >
-                <LinkIcon className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
-                <div className="text-caption-sm-regular">{issue.link_count}</div>
-              </div>
-            </Tooltip>
-          )
-        ) : null}
+                <LinkIcon className="h-3 w-3" strokeWidth={2} />
+                <span className="max-w-[100px] truncate">{link.title || link.url}</span>
+              </a>
+            ))}
+          />
+        )}
       </WithDisplayPropertiesHOC>
 
       {/* pages */}
@@ -547,39 +534,19 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         shouldRenderProperty={(properties) => !!properties.page && issue.issue_pages && issue.issue_pages.length > 0}
       >
         {issue.issue_pages && issue.issue_pages.length > 0 && (
-          <>
-            {issue.issue_pages.length < 5 ? (
-              <div className="flex items-center gap-1">
-                {issue.issue_pages.map((page) => (
-                  <a
-                    key={page.id}
-                    href={`/${workspaceSlug}/projects/${issue.project_id}/pages/${page.id}`}
-                    className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FileText className="h-3 w-3" strokeWidth={2} />
-                    <span className="max-w-[100px] truncate">{page.name}</span>
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <Tooltip
-                tooltipHeading="Pages"
-                tooltipContent={`${issue.issue_pages.length}`}
-                isMobile={isMobile}
-                renderByDefault={false}
+          <ChipGroup
+            chips={issue.issue_pages.map((page) => (
+              <a
+                key={page.id}
+                href={`/${workspaceSlug}/projects/${issue.project_id}/pages/${page.id}`}
+                className="flex h-5 items-center gap-1 rounded-sm border-[0.5px] border-strong px-2 text-caption-sm-regular hover:bg-layer-1"
+                onClick={(e) => e.stopPropagation()}
               >
-                <div
-                  className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
-                  onFocus={handleEventPropagation}
-                  onClick={handleEventPropagation}
-                >
-                  <FileText className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
-                  <div className="text-caption-sm-regular">{issue.issue_pages.length}</div>
-                </div>
-              </Tooltip>
-            )}
-          </>
+                <FileText className="h-3 w-3" strokeWidth={2} />
+                <span className="max-w-[100px] truncate">{page.name}</span>
+              </a>
+            ))}
+          />
         )}
       </WithDisplayPropertiesHOC>
 
