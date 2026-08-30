@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 
 from plane.app.views.base import BaseAPIView
-from plane.db.models import Issue, WorkspaceMember
+from plane.db.models import Issue, Page, WorkspaceMember
 
 LIMIT = 500
 
@@ -51,3 +51,30 @@ class AllWorkEndpoint(BaseAPIView):
     def get(self, request):
         issues = _done_filter(_issues_for(request.user), request.query_params)[:LIMIT]
         return Response([_serialize(issue) for issue in issues])
+
+
+class MyPagesEndpoint(BaseAPIView):
+    def get(self, request):
+        workspace_ids = WorkspaceMember.objects.filter(member=request.user, is_active=True).values_list(
+            "workspace_id", flat=True
+        )
+        pages = (
+            Page.objects.filter(workspace_id__in=workspace_ids)
+            .select_related("workspace", "owned_by")
+            .prefetch_related("projects")
+            .order_by("-updated_at")[:LIMIT]
+        )
+        return Response(
+            [
+                {
+                    "type": "page",
+                    "id": str(page.id),
+                    "name": page.name,
+                    "href": f"/{page.workspace.slug}/projects/{page.projects.first().id if page.projects.exists() else ''}/pages/{page.id}/",
+                    "project_id": str(page.projects.first().id) if page.projects.exists() else None,
+                    "created_by": str(page.owned_by_id),
+                    "updated_at": page.updated_at.isoformat(),
+                }
+                for page in pages
+            ]
+        )
