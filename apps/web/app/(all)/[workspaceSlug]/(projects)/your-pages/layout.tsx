@@ -13,6 +13,7 @@ import { AppHeader } from "@/components/core/app-header";
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
 import { ContentWrapper } from "@/components/core/content-wrapper";
 import { YourPagesNavbar } from "./navbar";
+import { NewPageButton } from "./new-page-button";
 
 function YourPagesHeader() {
   const { t } = useTranslation();
@@ -27,6 +28,9 @@ function YourPagesHeader() {
           </Breadcrumbs>
         </div>
       </Header.LeftItem>
+      <Header.RightItem>
+        <NewPageButton />
+      </Header.RightItem>
     </Header>
   );
 }
