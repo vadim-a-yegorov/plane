@@ -16,7 +16,12 @@ function SignUpPage() {
   return (
     <DefaultLayout>
       <AuthenticationWrapper pageType={EPageTypes.NON_AUTHENTICATED}>
-        <AuthBase authType={EAuthModes.SIGN_UP} />
+        <div className="flex h-screen w-full items-center justify-center">
+          <div className="text-center">
+            <p className="text-secondary">Sign-up is disabled. Contact your administrator.</p>
+            <a href="/sign-in/" className="text-primary hover:underline mt-4 inline-block">Go to sign-in</a>
+          </div>
+        </div>
       </AuthenticationWrapper>
     </DefaultLayout>
   );

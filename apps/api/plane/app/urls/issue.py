@@ -10,12 +10,9 @@ from plane.app.views import (
     SubIssuesEndpoint,
     IssueLinkViewSet,
     IssueAttachmentEndpoint,
-    CommentReactionViewSet,
     IssueActivityEndpoint,
     IssueArchiveViewSet,
-    IssueCommentViewSet,
     IssueListEndpoint,
-    IssueReactionViewSet,
     IssueRelationViewSet,
     IssueSubscriberViewSet,
     ProjectUserDisplayPropertyEndpoint,
@@ -26,9 +23,7 @@ from plane.app.views import (
     IssuePaginatedViewSet,
     IssueDetailEndpoint,
     IssueAttachmentV2Endpoint,
-    IssueBulkUpdateDateEndpoint,
     IssueVersionEndpoint,
-    WorkItemDescriptionVersionEndpoint,
     IssueMetaEndpoint,
     IssueDetailIdentifierEndpoint,
 )
@@ -152,25 +147,6 @@ urlpatterns = [
         name="project-issue-history",
     ),
     ## Issue Activity
-    ## IssueComments
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/comments/",
-        IssueCommentViewSet.as_view({"get": "list", "post": "create"}),
-        name="project-issue-comment",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/comments/<uuid:pk>/",
-        IssueCommentViewSet.as_view(
-            {
-                "get": "retrieve",
-                "put": "update",
-                "patch": "partial_update",
-                "delete": "destroy",
-            }
-        ),
-        name="project-issue-comment",
-    ),
-    ## End IssueComments
     # Issue Subscribers
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/issue-subscribers/",
@@ -188,30 +164,6 @@ urlpatterns = [
         name="project-issue-subscribers",
     ),
     ## End Issue Subscribers
-    # Issue Reactions
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/reactions/",
-        IssueReactionViewSet.as_view({"get": "list", "post": "create"}),
-        name="project-issue-reactions",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/reactions/<str:reaction_code>/",
-        IssueReactionViewSet.as_view({"delete": "destroy"}),
-        name="project-issue-reactions",
-    ),
-    ## End Issue Reactions
-    # Comment Reactions
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/comments/<uuid:comment_id>/reactions/",
-        CommentReactionViewSet.as_view({"get": "list", "post": "create"}),
-        name="project-issue-comment-reactions",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/comments/<uuid:comment_id>/reactions/<str:reaction_code>/",
-        CommentReactionViewSet.as_view({"delete": "destroy"}),
-        name="project-issue-comment-reactions",
-    ),
-    ## End Comment Reactions
     ## ProjectUserProperty
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/user-properties/",
@@ -249,11 +201,6 @@ urlpatterns = [
         name="deleted-issues",
     ),
     path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issue-dates/",
-        IssueBulkUpdateDateEndpoint.as_view(),
-        name="project-issue-dates",
-    ),
-    path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/versions/",
         IssueVersionEndpoint.as_view(),
         name="issue-versions",
@@ -262,16 +209,6 @@ urlpatterns = [
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/versions/<uuid:pk>/",
         IssueVersionEndpoint.as_view(),
         name="issue-versions",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:work_item_id>/description-versions/",
-        WorkItemDescriptionVersionEndpoint.as_view(),
-        name="work-item-versions",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:work_item_id>/description-versions/<uuid:pk>/",
-        WorkItemDescriptionVersionEndpoint.as_view(),
-        name="work-item-versions",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/meta/",

@@ -31,7 +31,6 @@ import {
 // components
 import {
   IssueDefaultProperties,
-  IssueDescriptionEditor,
   IssueParentTag,
   IssueProjectSelect,
   IssueTitleInput,
@@ -76,7 +75,6 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   const {
     data,
     issueTitleRef,
-    onAssetUpload,
     onChange,
     onClose,
     onSubmit,
@@ -96,7 +94,6 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   } = props;
 
   // states
-  const [gptAssistantModal, setGptAssistantModal] = useState(false);
   const [isMoving, setIsMoving] = useState<boolean>(false);
 
   // refs
@@ -209,16 +206,6 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   }, [workItemTemplateId]);
 
   const handleFormSubmit = async (formData: Partial<TIssue>, is_draft_issue = false) => {
-    // Check if the editor is ready to discard
-    if (!editorRef.current?.isEditorReadyToDiscard()) {
-      setToast({
-        type: TOAST_TYPE.ERROR,
-        title: t("error"),
-        message: t("editor_is_not_ready_to_discard_changes"),
-      });
-      return;
-    }
-
     // check for required properties validation
     if (
       !handlePropertyValuesValidation({
@@ -244,7 +231,6 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
 
     await onSubmit(submitData, is_draft_issue)
       .then(() => {
-        setGptAssistantModal(false);
         if (isCreateMoreToggleEnabled && workItemTemplateId) {
           handleTemplateChange({
             workspaceSlug: workspaceSlug?.toString(),
@@ -389,36 +375,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                 />
               </div>
             </div>
-            <div
-              className={cn(
-                "space-y-3 bg-surface-1 pb-4",
-                activeAdditionalPropertiesLength > 4 &&
-                  "vertical-scrollbar scrollbar-sm max-h-[45vh] overflow-hidden overflow-y-auto"
-              )}
-            >
-              <div className="px-5">
-                <IssueDescriptionEditor
-                  control={control}
-                  isDraft={isDraft}
-                  issueName={watch("name")}
-                  issueId={data?.id}
-                  descriptionHtmlData={data?.description_html}
-                  editorRef={editorRef}
-                  submitBtnRef={submitBtnRef}
-                  gptAssistantModal={gptAssistantModal}
-                  workspaceSlug={workspaceSlug?.toString()}
-                  projectId={projectId}
-                  handleFormChange={handleFormChange}
-                  handleDescriptionHTMLDataChange={(description_html) =>
-                    setValue<"description_html">("description_html", description_html)
-                  }
-                  setGptAssistantModal={setGptAssistantModal}
-                  handleGptAssistantClose={() => reset(getValues())}
-                  onAssetUpload={onAssetUpload}
-                  onClose={onClose}
-                />
-              </div>
-            </div>
+
             <div
               className={cn(
                 "rounded-b-lg border-t-[0.5px] border-subtle bg-surface-1 px-4 py-3",
@@ -465,21 +422,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                   )}
                   <div className="flex items-center gap-2">
                     <div tabIndex={getIndex("discard_button")}>
-                      <Button
-                        variant="secondary"
-                        size="lg"
-                        onClick={() => {
-                          if (editorRef.current?.isEditorReadyToDiscard()) {
-                            onClose();
-                          } else {
-                            setToast({
-                              type: TOAST_TYPE.ERROR,
-                              title: "Error!",
-                              message: "Editor is still processing changes. Please wait before proceeding.",
-                            });
-                          }
-                        }}
-                      >
+                      <Button variant="secondary" size="lg" onClick={() => onClose()}>
                         {t("discard")}
                       </Button>
                     </div>

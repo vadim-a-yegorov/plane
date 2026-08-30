@@ -118,6 +118,7 @@ class Project(BaseModel):
     # external_id for imports
     external_source = models.CharField(max_length=255, null=True, blank=True)
     external_id = models.CharField(max_length=255, blank=True, null=True)
+    calendar_enabled = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
         # Track if timezone is provided, if so, don't override it with the workspace timezone when saving
