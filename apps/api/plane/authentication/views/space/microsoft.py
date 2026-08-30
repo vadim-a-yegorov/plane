@@ -19,7 +19,7 @@ from plane.authentication.adapter.error import (
     AUTHENTICATION_ERROR_CODES,
     AuthenticationException,
 )
-from plane.utils.path_validator import validate_next_path
+from plane.utils.path_validator import get_safe_redirect_url, validate_next_path
 
 
 class MicrosoftOauthInitiateSpaceEndpoint(View):
@@ -88,8 +88,9 @@ class MicrosoftCallbackSpaceEndpoint(View):
             provider = MicrosoftOAuthProvider(request=request, code=code)
             user = provider.authenticate()
             user_login(request=request, user=user, is_space=True)
-            url = (
-                f"{base_host(request=request, is_space=True)}{str(validate_next_path(next_path)) if next_path else ''}"
+            url = get_safe_redirect_url(
+                base_url=base_host(request=request, is_space=True),
+                next_path=next_path or "",
             )
             return HttpResponseRedirect(url)
         except AuthenticationException as e:
