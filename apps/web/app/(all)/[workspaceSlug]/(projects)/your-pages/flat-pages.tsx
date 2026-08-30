@@ -11,8 +11,11 @@ import useSWR from "swr";
 import { API_BASE_URL } from "@plane/constants";
 import { LinkIcon, PageIcon } from "@plane/propel/icons";
 import { getFileURL } from "@plane/utils";
+// components
+import { ListItem } from "@/components/core/list";
 // hooks
 import { useAppRouter } from "@/hooks/use-app-router";
+import { usePlatformOS } from "@/hooks/use-platform-os";
 // services
 import { APIService } from "@/services/api.service";
 
@@ -51,6 +54,7 @@ const flatPagesService = new FlatPagesService();
 export function FlatPages({ tab }: { tab: TFlatPagesTab }) {
   const router = useAppRouter();
   const parentRef = useRef<HTMLDivElement>(null);
+  const { isMobile } = usePlatformOS();
   const { data: entries, error } = useSWR(`FLAT_PAGES_${tab}`, () => flatPagesService.getMyPages(tab), {
     revalidateIfStale: false,
     revalidateOnFocus: false,
@@ -67,27 +71,34 @@ export function FlatPages({ tab }: { tab: TFlatPagesTab }) {
   if (entries.length === 0) return <div className="text-sm p-4 text-secondary">Nothing here yet.</div>;
 
   return (
-    <div ref={parentRef} className="h-full overflow-y-auto px-3 py-2">
-      {entries.map((entry) => {
-        const Icon = entry.type === "page" ? PageIcon : entry.type === "file" ? Paperclip : LinkIcon;
-        return (
-          <div
-            key={`${entry.type}_${entry.id}`}
-            onClick={() => openEntry(entry)}
-            className="group relative flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-subtle bg-layer-1 px-4 py-3 mb-2 hover:bg-layer-1-hover hover:border-strong active:bg-layer-1-active transition-all shadow-sm"
-          >
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-layer-2 flex-shrink-0">
-                <Icon className="h-4 w-4 text-tertiary" />
-              </div>
-              <span className="truncate text-sm font-medium text-primary">{entry.name}</span>
-            </div>
+    <div ref={parentRef} className="h-full overflow-y-auto">
+      {entries.map((entry) => (
+        <ListItem
+          key={`${entry.type}_${entry.id}`}
+          title={entry.name}
+          itemLink={entry.href || "#"}
+          onItemClick={(e) => {
+            e.preventDefault();
+            openEntry(entry);
+          }}
+          prependTitleElement={
+            entry.type === "page" ? (
+              <PageIcon className="h-4 w-4 text-tertiary" />
+            ) : entry.type === "file" ? (
+              <Paperclip className="h-4 w-4 text-tertiary" />
+            ) : (
+              <LinkIcon className="h-4 w-4 text-tertiary" />
+            )
+          }
+          appendTitleElement={
             <span className="text-xs text-secondary flex-shrink-0">
               {new Date(entry.updated_at).toLocaleDateString()}
             </span>
-          </div>
-        );
-      })}
+          }
+          isMobile={isMobile}
+          parentRef={parentRef}
+        />
+      ))}
     </div>
   );
 }
