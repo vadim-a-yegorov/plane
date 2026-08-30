@@ -34,7 +34,14 @@ export function Logo({ logo, size = 16, type = "material" }: Props) {
   const loadingSkeleton = <span style={{ height: size, width: size }} className="rounded-sm bg-layer-1" />;
 
   // Early returns for loading/empty states
-  if (!logo || !logo.in_use) return loadingSkeleton;
+  if (!logo || !logo.in_use) {
+    const DefaultIcon = LUCIDE_ICONS_LIST.find((item) => item.name === "Folder");
+    if (DefaultIcon) {
+      const IconEl = DefaultIcon.element;
+      return <IconEl style={{ height: size, width: size }} className="text-tertiary" />;
+    }
+    return loadingSkeleton;
+  }
 
   const { in_use, emoji, icon } = logo;
   const value = in_use === "emoji" ? emoji?.value : icon?.name;
