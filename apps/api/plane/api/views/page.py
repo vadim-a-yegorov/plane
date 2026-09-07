@@ -41,8 +41,11 @@ class PageListCreateAPIEndpoint(BaseAPIView):
 
     def post(self, request, slug, project_id):
         Project.objects.get(pk=project_id, workspace__slug=slug)
+        payload = dict(request.data)
+        if payload.get("parent_id") and not payload.get("parent"):
+            payload["parent"] = payload["parent_id"]
         serializer = PageSerializer(
-            data=request.data,
+            data=payload,
             context={
                 "project_id": project_id,
                 "owned_by_id": request.user.id,
@@ -138,10 +141,13 @@ class WorkspacePageListCreateAPIEndpoint(BaseAPIView):
 
     def post(self, request, slug):
         workspace = Workspace.objects.get(slug=slug)
-        project_id = request.data.get("project_id")
+        payload = dict(request.data)
+        if payload.get("parent_id") and not payload.get("parent"):
+            payload["parent"] = payload["parent_id"]
+        project_id = payload.get("project_id")
         if project_id:
             serializer = PageSerializer(
-                data=request.data,
+                data=payload,
                 context={
                     "project_id": project_id,
                     "owned_by_id": request.user.id,
